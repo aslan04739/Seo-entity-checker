@@ -1,0 +1,34 @@
+# Credentials
+credentials.json
+*.json
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+/build
+/dist
+*.spec
+
+# Cache
+.pytest_cache/
+
+# Environment
+.env
+venv/
+env/
