@@ -355,7 +355,7 @@ with st.sidebar:
             st.rerun()
 
 # --- MAIN CONTENT ---
-st.title("SEO Crawler Pro - Easy Everyday Analyzer")
+st.title("SEO GEO Entity checker")
 
 # URL Input
 url_input = st.text_input(
