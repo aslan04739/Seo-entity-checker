@@ -722,6 +722,19 @@ with st.sidebar:
             h1, h2, h3 {{
                 letter-spacing: -0.01em;
                 font-weight: 600;
+                white-space: normal !important;
+                overflow: visible !important;
+                text-overflow: unset !important;
+                line-height: 1.2 !important;
+                word-break: break-word;
+                overflow-wrap: anywhere;
+            }}
+            [data-testid="stHeadingWithActionElements"] {{
+                flex-wrap: wrap;
+                align-items: flex-start;
+            }}
+            [data-testid="stHeading"] {{
+                width: 100%;
             }}
             [data-testid="stMarkdownContainer"] *,
             [data-testid="stMetricLabel"],
