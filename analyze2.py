@@ -4,6 +4,7 @@ import csv
 import threading
 import argparse
 import json
+import shutil
 from urllib.parse import urlparse, urljoin
 from pathlib import Path
 
@@ -21,6 +22,7 @@ except ImportError as e:
 # --- Settings & Config ---
 CONFIG_DIR = Path.home() / ".seo_crawler"
 CONFIG_FILE = CONFIG_DIR / "config.json"
+APP_DIR = Path(__file__).resolve().parent
 CONFIG_DIR.mkdir(exist_ok=True)
 MIN_SALIENCE = 0.001
 DEBUG_DIR = CONFIG_DIR / "debug"
@@ -41,6 +43,42 @@ def save_config(config):
         pass
 
 CONFIG = load_config()
+
+
+def resolve_default_creds_path():
+    candidates = []
+
+    configured = CONFIG.get("creds_path")
+    if configured:
+        candidates.append(Path(configured).expanduser())
+
+    candidates.extend([
+        APP_DIR / "credentials.json",
+        CONFIG_DIR / "credentials.json",
+        Path.cwd() / "credentials.json",
+    ])
+
+    for candidate in candidates:
+        if candidate.exists() and candidate.is_file():
+            return str(candidate)
+    return None
+
+
+def promote_to_canonical_creds(source_path: str):
+    if not source_path:
+        return None
+
+    source = Path(source_path).expanduser()
+    if not source.exists() or not source.is_file():
+        return None
+
+    canonical = CONFIG_DIR / "credentials.json"
+    try:
+        if source.resolve() != canonical.resolve():
+            shutil.copy2(source, canonical)
+        return str(canonical)
+    except Exception:
+        return str(source)
 
 # --- LOGIC CLASS (Coeur du programme) ---
 class SEOLogic:
@@ -216,11 +254,11 @@ def run_gui():
         def __init__(self):
             super().__init__()
             # Initialize before any UI references
-            self.creds_path = CONFIG.get("creds_path")
-            if not self.creds_path:
-                default_creds = Path.cwd() / "credentials.json"
-                if default_creds.exists():
-                    self.creds_path = str(default_creds)
+            self.creds_path = resolve_default_creds_path()
+            if self.creds_path:
+                self.creds_path = promote_to_canonical_creds(self.creds_path) or self.creds_path
+                CONFIG["creds_path"] = self.creds_path
+                save_config(CONFIG)
             self.title("SEO Crawler Pro - Easy Everyday Analyzer")
             self.geometry("1000x750")
             self.grid_columnconfigure(1, weight=1)
@@ -444,12 +482,12 @@ More help: https://cloud.google.com/natural-language/docs/quickstart"""
                 title="Select Google Cloud Credentials JSON"
             )
             if f:
-                self.creds_path = f
+                self.creds_path = promote_to_canonical_creds(f) or f
                 self.set_creds_env()
-                CONFIG["creds_path"] = f
+                CONFIG["creds_path"] = self.creds_path
                 save_config(CONFIG)
                 self.update_creds_label()
-                self.log(f"✓ Credentials loaded: {os.path.basename(f)}")
+                self.log(f"✓ Credentials loaded: {os.path.basename(self.creds_path)}")
 
         def start_thread(self):
             if not self.creds_path or not os.path.exists(self.creds_path):

@@ -77,6 +77,15 @@ backgroundColor = "#ffffff"
 showErrorDetails = true
 ```
 
+### Streamlit Secrets (`.streamlit/secrets.toml`)
+Use `.streamlit/secrets.toml.example` as template:
+
+```bash
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml
+```
+
+Then paste your Google service-account values under `[google]`.
+
 ### Environment Variables
 ```bash
 GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json
@@ -179,7 +188,7 @@ streamlit run streamlit_app.py
 ### Streamlit Cloud
 - Push to GitHub
 - Connect at https://streamlit.io/cloud
-- Add secrets via dashboard
+- Add `[google]` secrets via dashboard (same format as `.streamlit/secrets.toml.example`)
 
 ### Docker
 ```bash

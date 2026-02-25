@@ -39,6 +39,7 @@ The app will be available at **`http://localhost:8501`**
 # - streamlit_app.py
 # - requirements.txt
 # - .streamlit/config.toml
+# - .streamlit/secrets.toml.example
 # - README.md
 
 git add .
@@ -56,7 +57,7 @@ git push origin main
 
 #### 3. Configure Secrets (Google Credentials)
 1. Go to app Settings → **Secrets**
-2. Add your Google Cloud JSON credentials:
+2. Copy values from your Google service-account JSON into this TOML format:
    ```toml
    [google]
    type = "service_account"
@@ -71,6 +72,9 @@ git push origin main
    client_x509_cert_url = "your-cert-url"
    ```
 3. Click **"Save"**
+4. Redeploy or restart the app
+
+The app now auto-detects `[google]` secrets and uses them directly (no sidebar upload needed in cloud).
 
 #### 4. Your App is Live! 🎉
 - URL: `https://[username]-[appname].streamlit.app`
@@ -121,6 +125,14 @@ GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json
 - **Crawl Depth**: 1-3 (default: 2)
 - **Timeout**: 10 seconds per page
 
+### Local Secrets Setup (Optional, Recommended)
+```bash
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml
+# then edit .streamlit/secrets.toml with your real values
+```
+
+If local secrets are configured, the app uses them automatically.
+
 ### Performance Tips
 - Use "Quick" preset (3 pages) for testing
 - Large sites take longer - start small
@@ -135,6 +147,7 @@ GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json
 |-------|----------|
 | **ImportError: google-cloud-language** | `pip install google-cloud-language` |
 | **Credentials not working** | Verify JSON file is valid, check permissions |
+| **Secrets error on Cloud** | Check `private_key` has `\\n` line breaks and all `[google]` fields are present |
 | **Analysis is slow** | Reduce max pages or use Quick preset |
 | **Timeout errors** | Website may be blocking requests, try another URL |
 | **No entities found** | Check website has text content (not JavaScript-only) |
@@ -159,7 +172,8 @@ CSV file contains:
 ├── streamlit_app.py          # Main Streamlit app
 ├── requirements.txt          # Python dependencies
 ├── .streamlit/
-│   └── config.toml          # Streamlit config (theme, etc)
+│   ├── config.toml          # Streamlit config (theme, etc)
+│   └── secrets.toml.example # Secrets template (do not commit real secrets)
 └── README.md                # Project documentation
 ```
 
