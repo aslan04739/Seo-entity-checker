@@ -693,7 +693,7 @@ with st.sidebar:
             }}
             .main .block-container {{
                 max-width: 1160px;
-                padding-top: 1.2rem;
+                padding-top: 3.25rem !important;
                 padding-bottom: 2rem;
             }}
             [data-testid="stSidebar"] {{
@@ -728,6 +728,10 @@ with st.sidebar:
                 line-height: 1.2 !important;
                 word-break: break-word;
                 overflow-wrap: anywhere;
+            }}
+            h1 {{
+                margin-top: 0.35rem !important;
+                padding-top: 0.2rem !important;
             }}
             [data-testid="stHeadingWithActionElements"] {{
                 flex-wrap: wrap;
@@ -833,7 +837,7 @@ with st.sidebar:
                 color: #111111;
             }}
             .block-container {{
-                padding-top: 1.25rem;
+                padding-top: 3.25rem !important;
             }}
             [data-testid="stMetric"] {{
                 background: #fcfcfc;
