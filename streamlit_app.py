@@ -43,6 +43,35 @@ if "lang" not in st.session_state:
     st.session_state.lang = "en"
 
 
+ESKIMOZ_BLUE = "#47BDEF"
+ESKIMOZ_ROYAL_BLUE = "#0860D6"
+ESKIMOZ_SKY_BLUE = "#39A9E9"
+ESKIMOZ_NAVY = "#001640"
+ESKIMOZ_LIME = "#92D050"
+ESKIMOZ_FOREST = "#15AD67"
+ESKIMOZ_RED = "#FF0000"
+ESKIMOZ_WHITE = "#FFFFFF"
+ESKIMOZ_BLUE_WHITE = "#F8FDFF"
+ESKIMOZ_LIGHT_GREY = "#F0F1F6"
+ESKIMOZ_TEXT = "#202124"
+ESKIMOZ_TEXT_MUTED = "#353535"
+
+PLOTLY_BRAND_TEMPLATE = go.layout.Template(
+    layout=dict(
+        font=dict(family="Inter, Arial, sans-serif", color=ESKIMOZ_TEXT),
+        paper_bgcolor=ESKIMOZ_WHITE,
+        plot_bgcolor=ESKIMOZ_WHITE,
+        colorway=[ESKIMOZ_BLUE, ESKIMOZ_ROYAL_BLUE, ESKIMOZ_SKY_BLUE, ESKIMOZ_NAVY],
+        margin=dict(t=70, l=30, r=30, b=30),
+        title=dict(font=dict(color=ESKIMOZ_TEXT, family="Inter, Arial, sans-serif")),
+        xaxis=dict(gridcolor=ESKIMOZ_LIGHT_GREY, zerolinecolor=ESKIMOZ_LIGHT_GREY, linecolor="#d9d9d9"),
+        yaxis=dict(gridcolor=ESKIMOZ_LIGHT_GREY, zerolinecolor=ESKIMOZ_LIGHT_GREY, linecolor="#d9d9d9"),
+    )
+)
+
+px.defaults.template = PLOTLY_BRAND_TEMPLATE
+
+
 TRANSLATIONS = {
     "en": {
         "app_title": "SEO GEO Entity Checker",
@@ -563,13 +592,20 @@ def create_salience_chart(results):
         return None
     
     df = pd.DataFrame(results)
-    df_sorted = df.nlargest(15, 'salience')[['name', 'salience']]
+    df_sorted = df.nlargest(15, 'salience')[['name', 'salience']].copy()
+    df_sorted['name'] = df_sorted['name'].astype(str).str.slice(0, 36)
     
-    fig = px.bar(df_sorted, x='salience', y='name', orientation='h',
-                 title='Top 15 Entities by Salience (Importance)',
-                 labels={'salience': 'Salience Score', 'name': 'Entity'},
-                 color='salience', color_continuous_scale='Viridis')
-    fig.update_layout(height=500, showlegend=False)
+    fig = px.bar(
+        df_sorted,
+        x='salience',
+        y='name',
+        orientation='h',
+        title='Top 15 Entities by Salience (Importance)',
+        labels={'salience': 'Salience Score', 'name': 'Entity'},
+    )
+    fig.update_traces(marker_color=ESKIMOZ_BLUE, marker_line_color=ESKIMOZ_ROYAL_BLUE, marker_line_width=0.5)
+    fig.update_layout(height=520, showlegend=False, yaxis={'categoryorder': 'total ascending'})
+    fig.update_traces(text=df_sorted['salience'].round(3), textposition='outside', cliponaxis=False)
     return fig
 
 def create_category_chart(results):
@@ -580,10 +616,16 @@ def create_category_chart(results):
     df = pd.DataFrame(results)
     category_counts = df['category'].value_counts()
     
-    fig = px.pie(values=category_counts.values, names=category_counts.index,
-                 title='Entity Types Distribution',
-                 color_discrete_sequence=px.colors.qualitative.Set3)
-    fig.update_layout(height=500)
+    fig = px.bar(
+        x=category_counts.values,
+        y=category_counts.index,
+        orientation='h',
+        title='Entity Types Distribution',
+        labels={'x': 'Entity Count', 'y': 'Category'},
+    )
+    fig.update_traces(marker_color=ESKIMOZ_ROYAL_BLUE, marker_line_color=ESKIMOZ_NAVY, marker_line_width=0.5)
+    fig.update_layout(height=420, showlegend=False, yaxis={'categoryorder': 'total ascending'})
+    fig.update_traces(text=category_counts.values, textposition='outside', cliponaxis=False)
     return fig
 
 def create_page_stats(results):
@@ -592,15 +634,21 @@ def create_page_stats(results):
         return None
     
     df = pd.DataFrame(results)
-    page_counts = df['source'].value_counts().reset_index()
+    page_counts = df['source'].value_counts().head(10).reset_index()
     page_counts.columns = ['URL', 'Entity Count']
-    page_counts['Domain'] = page_counts['URL'].apply(lambda x: urlparse(x).netloc)
+    page_counts['Page'] = page_counts['URL'].apply(lambda x: x.replace('https://', '').replace('http://', '')[:48])
     
-    fig = px.bar(page_counts, x='Domain', y='Entity Count',
-                 title='Entities Found Per Page',
-                 labels={'Entity Count': 'Number of Entities'},
-                 color='Entity Count', color_continuous_scale='Blues')
-    fig.update_layout(height=400, xaxis_tickangle=-45)
+    fig = px.bar(
+        page_counts,
+        x='Entity Count',
+        y='Page',
+        orientation='h',
+        title='Top Pages by Entity Count',
+        labels={'Entity Count': 'Number of Entities', 'Page': 'Page'},
+    )
+    fig.update_traces(marker_color=ESKIMOZ_SKY_BLUE, marker_line_color=ESKIMOZ_ROYAL_BLUE, marker_line_width=0.5)
+    fig.update_layout(height=420, showlegend=False, yaxis={'categoryorder': 'total ascending'})
+    fig.update_traces(text=page_counts['Entity Count'], textposition='outside', cliponaxis=False)
     return fig
 
 def get_statistics(results):
@@ -899,7 +947,8 @@ with st.sidebar:
         min_value=1,
         max_value=50,
         value=10,
-        help=t("max_pages_help")
+        help=t("max_pages_help"),
+        key="max_pages"
     )
     
     max_depth = st.slider(
@@ -907,7 +956,8 @@ with st.sidebar:
         min_value=1,
         max_value=3,
         value=2,
-        help=t("max_depth_help")
+        help=t("max_depth_help"),
+        key="max_depth"
     )
     
     st.divider()
